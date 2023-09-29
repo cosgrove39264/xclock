@@ -14,4 +14,7 @@
     </option>
   </component>
   <component name="PlatformIOWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="TaskProjectConfiguration">
+    <server type="Gitlab" url="http://gitlab" />
+  </component>
 </project>
