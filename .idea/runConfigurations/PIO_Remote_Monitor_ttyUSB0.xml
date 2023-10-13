@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="PIO Remote Monitor ttyUSB0" type="BashProRunConfiguration">
-    <scriptContent>pio remote --agent homeserver device monitor -p /dev/ttyUSB0</scriptContent>
-    <option name="sourceType" value="snippet" />
-    <RunnerSettings bashdbVersion="Automatic" bashPathMapper="Automatic" RunnerId="pro.bashsupport.shDebugRunner" />
-    <method v="2" />
-  </configuration>
-</component>
