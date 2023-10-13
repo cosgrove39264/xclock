@@ -6,6 +6,7 @@
 #define XCLOCK_SETUPMODE_H
 
 #include <Arduino.h>
+#include <HttpsOTAUpdate.h>
 
 extern "C" {
 class SetupMode {
@@ -20,14 +21,8 @@ protected:
 
     static void dec_val(uint8_t val, uint8_t mx);
 
+static void HttpEvent(HttpEvent_t *event);
 
-    static void update_started();
-
-    static void update_finished();
-
-    static void update_progress(int cur, int total);
-
-    static void update_error(int err);
 
 public:
     static bool active;
