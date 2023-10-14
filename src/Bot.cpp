@@ -98,8 +98,13 @@ void Bot::task(void *pvParameters) {
                         Dice::run(15);
                         myBot.sendMessage(msg, "Die Würfel sind gefallen");
                     } else if (tgReply.equalsIgnoreCase("/upgrade")) {
+                        while(!myBot.noNewMessage()){
+                            myBot.getNewMessage(msg);
+                        }
                         myBot.sendMessage(msg, "Firmware-Update wird gestartet");
                         SetupMode::start_http_ota();
+
+                        myBot.reset();
                     }else if (tgReply.equalsIgnoreCase("/help")) {
                         myBot.sendMessage(msg, "Verfügbare Optionen");
                         myBot.sendMessage(msg, "/dice - würfeln");
