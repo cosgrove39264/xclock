@@ -353,6 +353,7 @@ void SetupMode::http_ota_task(void *pvParameters) {
 
         return;
     }
+    SetupMode::ota_started=true;
 
     WiFiClient client;
 
@@ -410,6 +411,7 @@ void SetupMode::start_http_ota() {
     if (SetupMode::ota_started) {
         return;
     }
+    Display::start_pause();
 
     TaskHandle_t handle;
     xTaskCreate(SetupMode::http_ota_task,
