@@ -126,7 +126,7 @@ void Clock::task(void *pvParameters) {
                         case 1:
                             Display::fill_segment(0, (uint8_t) n, 150, 0, 0);
                             break;
-                        case 3:
+                        case 2:
                             Display::fill_segment_dice(0, (uint8_t) n, 150, 0, 0);
                             break;
                         default:

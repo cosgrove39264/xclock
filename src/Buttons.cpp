@@ -8,6 +8,7 @@
 #include "Clock.h"
 #include "SetupMode.h"
 #include "Dice.h"
+#include "Bot.h"
 
 TaskHandle_t Buttons::taskHandle = nullptr;
 uint8_t Buttons::buttonState[] = {0, 0, 0, 0};
@@ -110,6 +111,7 @@ void Buttons::task(void *pvParameters) {
                         RunningPixel::process_button_click(btn, buttonState[btn]);
                         Dice::process_button_click(btn, buttonState[btn]);
                         Display::process_button_click(btn, buttonState[btn]);
+                        Bot::process_button_click(btn, buttonState[btn]);
                 }
 
 
