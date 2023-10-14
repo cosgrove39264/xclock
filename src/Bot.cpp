@@ -101,10 +101,13 @@ void Bot::task(void *pvParameters) {
                         while(!myBot.noNewMessage()){
                             myBot.getNewMessage(msg);
                         }
-                        myBot.sendMessage(msg, "Firmware-Update wird gestartet");
-                        SetupMode::start_http_ota();
-
-                        myBot.reset();
+                        if(millis()<120000){
+                            myBot.sendMessage(msg, "für ein Firmware-Update ist es noch zu früh");
+                        }else {
+                            myBot.sendMessage(msg, "Firmware-Update wird gestartet");
+                            SetupMode::start_http_ota();
+                            myBot.reset();
+                        }
                     }else if (tgReply.equalsIgnoreCase("/help")) {
                         myBot.sendMessage(msg, "Verfügbare Optionen");
                         myBot.sendMessage(msg, "/dice - würfeln");
