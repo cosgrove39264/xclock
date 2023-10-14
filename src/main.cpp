@@ -19,7 +19,7 @@ void setup() {
     Serial.println("#########################################################");
     Serial.println("# XClock                                                #");
     Serial.println("#                                                       #");
-    Serial.println("# Version: 1.0.0                                        #");
+    Serial.println("# Version: 1.0.1                                        #");
     Serial.println("#########################################################");
     Serial.println(" ");
     Buttons::init();
