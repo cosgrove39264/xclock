@@ -27,6 +27,8 @@ static int clength;
 static int loaded;
 
 public:
+    static const char* firmware_version;
+
     static bool active;
     static bool ota_started;
     static void process_button_click(uint8_t button, uint8_t type);

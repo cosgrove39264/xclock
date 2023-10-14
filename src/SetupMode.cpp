@@ -11,6 +11,7 @@
 #include "ArduinoNvs.h"
 #include <HttpsOTAUpdate.h>
 #include "root_ca.h"
+#include "version.h"
 
 int SetupMode::current_step = 0;
 unsigned long SetupMode::last_action = 0;
@@ -19,6 +20,7 @@ uint8_t SetupMode::values[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool SetupMode::ota_started = false;
 int SetupMode::clength = 0;
 int SetupMode::loaded = 0;
+const char* SetupMode::firmware_version = XCLOCK_FIRMWARE_VERSION;
 
 void SetupMode::process_button_click(uint8_t button, uint8_t type) {
 
