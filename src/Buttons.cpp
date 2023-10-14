@@ -72,8 +72,7 @@ void Buttons::task(void *pvParameters) {
                     buttonState[btn] = 4;
                 }
 
-                if ((btn == 0 && buttonState[btn] > 2) || (btn == 3 && buttonState[btn] > 3) ||
-                    (btn == 2 && buttonState[btn] > 3)) {
+                if (buttonState[btn] > 2) {
                     Display::start_pause();
 
                     uint x = loops % teiler;
@@ -101,16 +100,11 @@ void Buttons::task(void *pvParameters) {
             } else if (lastState[btn] == LOW && currentState[btn] == HIGH) { // button is released
                 releasedTime[btn] = now;
                 lastClickTime[btn] = now;
-                if (btn == 0 || btn == 2 || btn == 3) {
-                    Display::resume();
-                }
+                Display::resume();
                 switch (buttonState[btn]) {
                     case 0:
-                        Serial.println("NO Click detected for Btn" + String(btn));
                         break;
                     default:
-                        Serial.println("Click detected for Btn" + String(btn) + " / " + String(buttonState[btn]));
-
                         SetupMode::process_button_click(btn, buttonState[btn]);
                         Clock::process_button_click(btn, buttonState[btn]);
                         RunningPixel::process_button_click(btn, buttonState[btn]);

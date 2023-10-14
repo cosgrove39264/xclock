@@ -9,9 +9,11 @@
 #include "AsyncTelegram2.h"
 #include "bot_config.h"
 #include "Dice.h"
+#include "ArduinoNvs.h"
 
 
 bool Bot::started = false;
+bool Bot::enabled = false;
 
 void Bot::start_bot() {
     if (started) {
@@ -23,6 +25,13 @@ void Bot::start_bot() {
     if (SetupMode::ota_started) {
         return;
     }
+    Bot::enabled = NVS.getInt("bot_enabled") > 2;
+
+    if (!Bot::enabled) {
+        return;
+    }
+    Serial.println("Aktiviere Bot");
+
     TaskHandle_t taskHandle;
     xTaskCreate(Bot::task,
                 "Bot",
@@ -70,8 +79,6 @@ void Bot::task(void *pvParameters) {
         }
         TBMessage msg;
         if (myBot.getNewMessage(msg)) {
-            String tgReply;
-            static String document;
             switch (msg.messageType) {
                 case MessageDocument : {
 
@@ -80,24 +87,23 @@ void Bot::task(void *pvParameters) {
                 }
                     break;
                 case MessageReply: {
-                    tgReply = msg.text;
-                    myBot.sendMessage(msg, "You have entered wrong password");
+                    myBot.sendMessage(msg, "You have entered wrong term");
                 }
                     break;
 
                 default: {
-                    tgReply = msg.text;
-                    if (tgReply.equalsIgnoreCase("/version")) {
+
+                    if (     msg.text.equalsIgnoreCase("/version")) {
                         String fw = "XClock Version: " + String(SetupMode::firmware_version);
                         myBot.sendMessage(msg, fw);
-                    } else if (tgReply.equalsIgnoreCase("/dice")) {
+                    } else if (msg.text.equalsIgnoreCase("/dice")) {
                         Dice::stop = true;
                         while (Dice::running) {
                             vTaskDelay(5 / portTICK_PERIOD_MS);
                         }
                         Dice::run(15);
                         myBot.sendMessage(msg, "Die Würfel sind gefallen");
-                    } else if (tgReply.equalsIgnoreCase("/upgrade")) {
+                    } else if (msg.text.equalsIgnoreCase("/upgrade")) {
 
                         if (millis() < 30000) {
                             myBot.sendMessage(msg, "für ein Firmware-Update ist es noch zu früh");
@@ -105,7 +111,7 @@ void Bot::task(void *pvParameters) {
                             start_ota = true;
                             myBot.sendMessage(msg, "Firmware-Update wird gestartet");
                         }
-                    } else if (tgReply.equalsIgnoreCase("/zeit")) {
+                    } else if (msg.text.equalsIgnoreCase("/zeit")) {
                         time_t now;
                         struct tm timeinfo{};
                         char buffer[80];
@@ -115,12 +121,13 @@ void Bot::task(void *pvParameters) {
                         strftime(buffer, 80, "%A, %B %d %Y %H:%M:%S", &timeinfo);
                         myBot.sendMessage(msg, "Aktuelle Zeit: " + String(buffer));
 
-                    } else if (tgReply.equalsIgnoreCase("/help")) {
+                    } else if (msg.text.equalsIgnoreCase("/help")) {
                         myBot.sendMessage(msg, "Verfügbare Optionen");
                         myBot.sendMessage(msg, "/dice - würfeln");
                         myBot.sendMessage(msg, "/upgrade - Firmware-Update");
-
+                        myBot.sendMessage(msg, "/zeit - aktuelle Zeit");
                         myBot.sendMessage(msg, "/version - XClock Version");
+                        myBot.sendMessage(msg, "/disable - deaktiviert den Bot");
                     } else {
                         Bot::send_welcome(myBot, msg.chatId);
                     }
@@ -145,4 +152,18 @@ void Bot::send_welcome(AsyncTelegram2 bot, uint64_t chat_id) {
     snprintf(welcome_msg, 128, "%s\n\n/help alle verfügbaren Optionen", bot.getBotName());
     bot.sendTo(chat_id, welcome_msg);
 
+}
+
+void Bot::process_button_click(uint8_t button, uint8_t type) {
+    if (button == 1) {
+        if (type == 5) {
+            if (Bot::enabled) {
+                NVS.setInt("bot_enabled", 1, true);
+                SetupMode::reboot();
+            } else {
+                NVS.setInt("bot_enabled", 2, true);
+
+            }
+        }
+    }
 }
