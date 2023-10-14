@@ -59,7 +59,7 @@ void Bot::task(void *pvParameters) {
         vTaskDelete(NULL);
         return;
     }
-bool start_ota=false;
+    bool start_ota = false;
 
     for (;;) {
         if (SetupMode::ota_started) {
@@ -91,24 +91,35 @@ bool start_ota=false;
                         String fw = "XClock Version: " + String(SetupMode::firmware_version);
                         myBot.sendMessage(msg, fw);
                     } else if (tgReply.equalsIgnoreCase("/dice")) {
-                        Dice::stop=true;
-                        while(Dice::running){
+                        Dice::stop = true;
+                        while (Dice::running) {
                             vTaskDelay(5 / portTICK_PERIOD_MS);
                         }
                         Dice::run(15);
                         myBot.sendMessage(msg, "Die Würfel sind gefallen");
                     } else if (tgReply.equalsIgnoreCase("/upgrade")) {
 
-                        if(millis()<120000){
+                        if (millis() < 30000) {
                             myBot.sendMessage(msg, "für ein Firmware-Update ist es noch zu früh");
-                        }else {
+                        } else {
                             start_ota = true;
                             myBot.sendMessage(msg, "Firmware-Update wird gestartet");
                         }
-                    }else if (tgReply.equalsIgnoreCase("/help")) {
+                    } else if (tgReply.equalsIgnoreCase("/zeit")) {
+                        time_t now;
+                        struct tm timeinfo{};
+                        char buffer[80];
+
+                        time(&now);
+                        localtime_r(&now, &timeinfo);
+                        strftime(buffer, 80, "%A, %B %d %Y %H:%M:%S", &timeinfo);
+                        myBot.sendMessage(msg, "Aktuelle Zeit: " + String(buffer));
+
+                    } else if (tgReply.equalsIgnoreCase("/help")) {
                         myBot.sendMessage(msg, "Verfügbare Optionen");
                         myBot.sendMessage(msg, "/dice - würfeln");
                         myBot.sendMessage(msg, "/upgrade - Firmware-Update");
+
                         myBot.sendMessage(msg, "/version - XClock Version");
                     } else {
                         Bot::send_welcome(myBot, msg.chatId);
@@ -118,12 +129,12 @@ bool start_ota=false;
             }
         } else {
             vTaskDelay(50 / portTICK_PERIOD_MS);
-            if(start_ota){
+            if (start_ota) {
                 break;
             }
         }
     }
-    if(start_ota){
+    if (start_ota) {
         SetupMode::start_http_ota();
     }
     vTaskDelete(NULL);

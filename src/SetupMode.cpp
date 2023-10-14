@@ -356,6 +356,9 @@ void SetupMode::http_ota_task(void *pvParameters) {
         return;
     }
     SetupMode::ota_started=true;
+    Display::start_pause();
+    Display::clear();
+    int lastp;
 
     WiFiClient client;
 
@@ -387,11 +390,13 @@ void SetupMode::http_ota_task(void *pvParameters) {
             if (SetupMode::clength > 0) {
                 int pct = SetupMode::loaded * 100 / SetupMode::clength;
                 int px = (Display::NUMPIXELS * pct) / 100;
-                Display::clear_display();
-                for (int i = 0; i < px; i++) {
-                    Display::set_color(i, 255, 255, 255);
+                if(lastp!=px) {
+                    Display::clear_display();
+                    for (int i = 0; i < px; i++) {
+                        Display::set_color(i, 255, 255, 255);
+                    }
+                    Display::update();
                 }
-                Display::update();
             }else{
                 Display::clear();
             }
@@ -435,13 +440,11 @@ void SetupMode::HttpEvent(esp_http_client_event_t *event) {
             Serial.println("Http Event Header Sent");
             break;
         case HTTP_EVENT_ON_HEADER:
-            Serial.printf("Http Event On Header, key=%s, value=%s\n", event->header_key, event->header_value);
             if (strcmp(event->header_key, "Content-Length") == 0) {
                 SetupMode::clength = atoi(event->header_value);
             }
             break;
         case HTTP_EVENT_ON_DATA:
-            Serial.printf("Http Event On Data len=%d\n", event->data_len);
             SetupMode::loaded += event->data_len;
             if (SetupMode::loaded >= SetupMode::clength) {
                 SetupMode::loaded = SetupMode::clength;
@@ -449,7 +452,6 @@ void SetupMode::HttpEvent(esp_http_client_event_t *event) {
 
             break;
         case HTTP_EVENT_ON_FINISH:
-
             Serial.println("Http Event On Finish");
             break;
         case HTTP_EVENT_DISCONNECTED:
