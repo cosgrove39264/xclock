@@ -31,6 +31,9 @@ void Dice::process_button_click(uint8_t button, uint8_t type) {
         return;
     }
 
+  if(SetupMode::ota_started){
+            return;
+        }
 
     if (button == 3) {
         if (type == 1 || type == 2) {
@@ -67,6 +70,9 @@ void Dice::task(void *pvParameters) {
 
     while (Dice::running) {
         if (SetupMode::active) {
+            break;
+        }
+        if (SetupMode::ota_started) {
             break;
         }
         if (!Display::pause) {

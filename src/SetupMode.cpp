@@ -10,12 +10,15 @@
 #include "Clock.h"
 #include "ArduinoNvs.h"
 #include <HttpsOTAUpdate.h>
+#include "root_ca.h"
 
 int SetupMode::current_step = 0;
 unsigned long SetupMode::last_action = 0;
 bool SetupMode::active = false;
 uint8_t SetupMode::values[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool SetupMode::ota_started = false;
+int SetupMode::clength = 0;
+int SetupMode::loaded = 0;
 
 void SetupMode::process_button_click(uint8_t button, uint8_t type) {
 
@@ -353,46 +356,6 @@ void SetupMode::http_ota_task(void *pvParameters) {
 
     WiFiClient client;
 
-    static const char* ca="-----BEGIN CERTIFICATE-----\n"
-                          "MIIHEjCCBfqgAwIBAgIQBE1y13zdpwLdWmfyoju92TANBgkqhkiG9w0BAQsFADBP\n"
-                          "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMSkwJwYDVQQDEyBE\n"
-                          "aWdpQ2VydCBUTFMgUlNBIFNIQTI1NiAyMDIwIENBMTAeFw0yMzAyMjEwMDAwMDBa\n"
-                          "Fw0yNDAzMjAyMzU5NTlaMGcxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9y\n"
-                          "bmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRUwEwYDVQQKEwxHaXRIdWIsIElu\n"
-                          "Yy4xFDASBgNVBAMMCyouZ2l0aHViLmlvMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A\n"
-                          "MIIBCgKCAQEAuLBgDhov8bGGS2TsEZ+meb7oh/GIxbRJmxC7yq/qr75UDHhDf8p7\n"
-                          "TkVbCyQp8bsj/Bmkx2xwSXZT0wkjZbJIe7Ycqgca4nka+Xpe5xb4pkrVOaPiDfdX\n"
-                          "7+34CHZbUtqL0OYebi/5D5lLalLKNOGkySAz05foenfFAxAmQYJhR6KvxFY/dqI4\n"
-                          "y7JwrnJ6Q8F+J6Ne1uP256UwcL0qlid6e/tA0ld3ryMSJ0I6xgtqjL26Le4/nxXu\n"
-                          "YlekppVQr0OwrHa44Q7Z/1bsdFCGtR+WLNGVBeW3BWeTTp7yWjgfp49DWt48V9pI\n"
-                          "elDGiDgVyJcsLOz4OQk2vRmNA1ZBZgck4wIDAQABo4ID0DCCA8wwHwYDVR0jBBgw\n"
-                          "FoAUt2ui6qiqhIx56rTaD5iyxZV2ufQwHQYDVR0OBBYEFI0CHHVazcamQXhpKMP3\n"
-                          "qqeYO9W7MHsGA1UdEQR0MHKCCyouZ2l0aHViLmlvgglnaXRodWIuaW+CDCouZ2l0\n"
-                          "aHViLmNvbYIKZ2l0aHViLmNvbYIOd3d3LmdpdGh1Yi5jb22CFyouZ2l0aHVidXNl\n"
-                          "cmNvbnRlbnQuY29tghVnaXRodWJ1c2VyY29udGVudC5jb20wDgYDVR0PAQH/BAQD\n"
-                          "AgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjCBjwYDVR0fBIGHMIGE\n"
-                          "MECgPqA8hjpodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNlcnRUTFNSU0FT\n"
-                          "SEEyNTYyMDIwQ0ExLTQuY3JsMECgPqA8hjpodHRwOi8vY3JsNC5kaWdpY2VydC5j\n"
-                          "b20vRGlnaUNlcnRUTFNSU0FTSEEyNTYyMDIwQ0ExLTQuY3JsMD4GA1UdIAQ3MDUw\n"
-                          "MwYGZ4EMAQICMCkwJwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuZGlnaWNlcnQuY29t\n"
-                          "L0NQUzB/BggrBgEFBQcBAQRzMHEwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmRp\n"
-                          "Z2ljZXJ0LmNvbTBJBggrBgEFBQcwAoY9aHR0cDovL2NhY2VydHMuZGlnaWNlcnQu\n"
-                          "Y29tL0RpZ2lDZXJ0VExTUlNBU0hBMjU2MjAyMENBMS0xLmNydDAJBgNVHRMEAjAA\n"
-                          "MIIBfgYKKwYBBAHWeQIEAgSCAW4EggFqAWgAdwB2/4g/Crb7lVHCYcz1h7o0tKTN\n"
-                          "uyncaEIKn+ZnTFo6dAAAAYZ0gHV7AAAEAwBIMEYCIQCqfmfSO8MxeeVZ/fJzqqBB\n"
-                          "p+VqeRDUOUBVGyTTOn43ewIhAJT0S27mmGUlpqNiDADP+Jo8C6kYHF+7U6TY74bH\n"
-                          "XHAaAHYAc9meiRtMlnigIH1HneayxhzQUV5xGSqMa4AQesF3crUAAAGGdIB1agAA\n"
-                          "BAMARzBFAiEAguB+XQVANBj2MPcJzbz+LBPrkDDOEO3op52jdHUSW3ICIF0fnYdW\n"
-                          "qvdtmgQNSns13pAppdQWp4/f/jerNYskI7krAHUASLDja9qmRzQP5WoC+p0w6xxS\n"
-                          "ActW3SyB2bu/qznYhHMAAAGGdIB1SgAABAMARjBEAiAT/wA2qGGHSKZqBAm84z6q\n"
-                          "E+dGPQZ1aCMY52pFSfcw8QIgP/SciuZG02X2mBO/miDT2hCp4y5d2sc7FE5PThyC\n"
-                          "pbMwDQYJKoZIhvcNAQELBQADggEBADekGxEin/yfyWcHj6qGE5/gCB1uDI1l+wN5\n"
-                          "UMZ2ujCQoKQceRMHuVoYjZdMBXGK0CIXxhmiIosD9iyEcWxV3+KZQ2Xl17e3N0zG\n"
-                          "yOXx2Kd7B13ruBxQpKOO8Ez4uGpyWb5DDoretV6Pnj9aQ2SCzODedvS+phIKBmi7\n"
-                          "d+FM70tNZ6/2csdrG5xIU6d/7XYYXPD2xkwkU1dX4UKmPa7h9ZPyavopcgE+twbx\n"
-                          "LxoOkcXsNb/12jOV3iQSDfXDI41AgtFc694KCOjlg+UKizpemE53T5/cq37OqChP\n"
-                          "qnlPyb6PYIhua/kgbH84ltba1xEDQ9i4UYfOMiJNZEzEdSfQ498=\n"
-                          "-----END CERTIFICATE-----\n";
 
     // The line below is optional. It can be used to blink the LED on the board during flashing
     // The LED will be on during download of one buffer of data from the network. The LED will
@@ -403,30 +366,38 @@ void SetupMode::http_ota_task(void *pvParameters) {
     // httpUpdate.setLedPin(LED_BUILTIN, LOW);
 
     HttpsOTAStatus_t otastatus;
-        HttpsOTA.onHttpEvent(HttpEvent);
-    HttpsOTA.begin("https://raw.githubusercontent.com/cosgrove39264/xclock/main/firmware/firmware.bin", ca);
+    HttpsOTA.onHttpEvent(HttpEvent);
+    HttpsOTA.begin("https://raw.githubusercontent.com/cosgrove39264/xclock/main/firmware/firmware.bin", root_ca);
 
-    for(;;){
+    for (;;) {
         otastatus = HttpsOTA.status();
-        if(otastatus == HTTPS_OTA_SUCCESS) {
-            Serial.println("Firmware written successfully. To reboot device, call API ESP.restart() or PUSH restart button on device");
-            if (!Display::pause) {
-                Display::start_pause();
-                Display::fill(0, 255, 0);
-                Display::update();
-                delay(500);
-                Display::resume();
-            }
+        if (otastatus == HTTPS_OTA_SUCCESS) {
+            Serial.println(
+                    "Firmware written successfully. To reboot device, call API ESP.restart() or PUSH restart button on device");
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+            Display::fill(0, 255, 0);
+            Display::update();
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
             SetupMode::reboot();
-        } else if(otastatus == HTTPS_OTA_FAIL) {
-            Serial.println("Firmware Upgrade Fail");
-            if (!Display::pause) {
-                Display::start_pause();
-                Display::fill( 255, 0,0);
+
+        } else if (otastatus == HTTPS_OTA_UPDATING) {
+            if (SetupMode::clength > 0) {
+                int pct = SetupMode::loaded * 100 / SetupMode::clength;
+                int px = (Display::NUMPIXELS * pct) / 100;
+                Display::clear_display();
+                for (int i = 0; i < px; i++) {
+                    Display::set_color(i, 255, 255, 255);
+                }
                 Display::update();
-                delay(500);
-                Display::resume();
+            }else{
+                Display::clear();
             }
+        } else if (otastatus == HTTPS_OTA_FAIL) {
+            Serial.println("Firmware Upgrade Fail");
+            Display::fill(255, 0, 0);
+            Display::update();
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+
             SetupMode::reboot();
         }
     }
@@ -449,7 +420,7 @@ void SetupMode::start_http_ota() {
 }
 
 void SetupMode::HttpEvent(esp_http_client_event_t *event) {
-    switch(event->event_id) {
+    switch (event->event_id) {
         case HTTP_EVENT_ERROR:
             Serial.println("Http Event Error");
             break;
@@ -461,17 +432,27 @@ void SetupMode::HttpEvent(esp_http_client_event_t *event) {
             break;
         case HTTP_EVENT_ON_HEADER:
             Serial.printf("Http Event On Header, key=%s, value=%s\n", event->header_key, event->header_value);
+            if (strcmp(event->header_key, "Content-Length") == 0) {
+                SetupMode::clength = atoi(event->header_value);
+            }
             break;
         case HTTP_EVENT_ON_DATA:
+            Serial.printf("Http Event On Data len=%d\n", event->data_len);
+            SetupMode::loaded += event->data_len;
+            if (SetupMode::loaded >= SetupMode::clength) {
+                SetupMode::loaded = SetupMode::clength;
+            }
+
             break;
         case HTTP_EVENT_ON_FINISH:
+
             Serial.println("Http Event On Finish");
             break;
         case HTTP_EVENT_DISCONNECTED:
             Serial.println("Http Event Disconnected");
             break;
-     /*   case HTTP_EVENT_REDIRECT:
-            Serial.println("Http Event Redirect");
-            break;*/
+            /*   case HTTP_EVENT_REDIRECT:
+                   Serial.println("Http Event Redirect");
+                   break;*/
     }
 }

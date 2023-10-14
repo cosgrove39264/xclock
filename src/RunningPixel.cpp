@@ -40,7 +40,10 @@ void RunningPixel::task(void *pvParameters) {
     while (RunningPixel::running) {
         if (SetupMode::active) {
             break;
+        }  if(SetupMode::ota_started){
+            break;
         }
+
         if (!Display::pause) {
             pos += dir;
             if (dir > 0) {

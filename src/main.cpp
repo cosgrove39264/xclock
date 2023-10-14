@@ -10,12 +10,18 @@
 bool marked = false;
 
 void setup() {
+
     NVS.begin();
 
     Serial.begin(115200);
     while (!Serial);
-
-
+    Serial.println(" ");
+    Serial.println("#########################################################");
+    Serial.println("# XClock                                                #");
+    Serial.println("#                                                       #");
+    Serial.println("# Version: 1.0.0                                        #");
+    Serial.println("#########################################################");
+    Serial.println(" ");
     Buttons::init();
     Display::init();
     Clock::init();

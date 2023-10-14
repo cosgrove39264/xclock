@@ -50,6 +50,9 @@ void Clock::task(void *pvParameters) {
 
     for (;;) {
 
+        if(SetupMode::ota_started){
+            break;
+        }
 
         if (WLan::connected && (!ntpinited || (millis() - last_update > 60000))) {
             if (!ntpinited) {
@@ -105,13 +108,13 @@ void Clock::task(void *pvParameters) {
         int o = hours % 10;
         int m = minutes / 10;
         int p = minutes % 10;
-        strftime(buffer, 80, "%A, %B %d %Y %H:%M:%S", &timeinfo);
+       /* strftime(buffer, 80, "%A, %B %d %Y %H:%M:%S", &timeinfo);
         Serial.print("Now: " + String(buffer) + " *** ");
         Serial.print(String(n) + "  ");
         Serial.print(String(o) + "  ");
         Serial.print(String(m) + "  ");
         Serial.println(String(p) + "  ");
-
+*/
 
         if (hours == 0 && minutes == 0) {
             RunningPixel::run(7);

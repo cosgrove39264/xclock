@@ -15,7 +15,7 @@ protected:
     static unsigned long last_action;
     static uint8_t values[12];
 
-    static bool ota_started;
+
 
     static void inc_val(uint8_t val, uint8_t mx);
 
@@ -23,10 +23,12 @@ protected:
 
 static void HttpEvent(HttpEvent_t *event);
 
+static int clength;
+static int loaded;
 
 public:
     static bool active;
-
+    static bool ota_started;
     static void process_button_click(uint8_t button, uint8_t type);
 
     static void reboot();
