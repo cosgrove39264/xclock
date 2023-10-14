@@ -59,7 +59,7 @@ void Bot::task(void *pvParameters) {
         vTaskDelete(NULL);
         return;
     }
-
+bool start_ota=false;
 
     for (;;) {
         if (SetupMode::ota_started) {
@@ -98,15 +98,12 @@ void Bot::task(void *pvParameters) {
                         Dice::run(15);
                         myBot.sendMessage(msg, "Die Würfel sind gefallen");
                     } else if (tgReply.equalsIgnoreCase("/upgrade")) {
-                        while(!myBot.noNewMessage()){
-                            myBot.getNewMessage(msg);
-                        }
+
                         if(millis()<120000){
                             myBot.sendMessage(msg, "für ein Firmware-Update ist es noch zu früh");
                         }else {
+                            start_ota = true;
                             myBot.sendMessage(msg, "Firmware-Update wird gestartet");
-                            SetupMode::start_http_ota();
-                            myBot.reset();
                         }
                     }else if (tgReply.equalsIgnoreCase("/help")) {
                         myBot.sendMessage(msg, "Verfügbare Optionen");
@@ -121,7 +118,13 @@ void Bot::task(void *pvParameters) {
             }
         } else {
             vTaskDelay(50 / portTICK_PERIOD_MS);
+            if(start_ota){
+                break;
+            }
         }
+    }
+    if(start_ota){
+        SetupMode::start_http_ota();
     }
     vTaskDelete(NULL);
 }
